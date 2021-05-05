@@ -1,46 +1,41 @@
 package fr.asterox.NotesCentral.bean;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "notes")
 public class Note {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	@DBRef
-	private PatientDTO patient;
+	private Long noteId;
+	private Long patientId;
 	private String practitionerNote;
 
 	public Note() {
 		super();
 	}
 
-	public Note(Long id, PatientDTO patient, String practitionerNote) {
+	public Note(Long noteId, Long patientId, String practitionerNote) {
 		super();
-		this.id = id;
-		this.patient = patient;
+		this.noteId = noteId;
+		this.patientId = patientId;
 		this.practitionerNote = practitionerNote;
 	}
 
-	public Long getId() {
-		return id;
+	public Long getNoteId() {
+		return noteId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setNoteId(Long noteId) {
+		this.noteId = noteId;
 	}
 
-	public PatientDTO getPatient() {
-		return patient;
+	public Long getPatientId() {
+		return patientId;
 	}
 
-	public void setPatient(PatientDTO patient) {
-		this.patient = patient;
+	public void setPatientId(Long patientId) {
+		this.patientId = patientId;
 	}
 
 	public String getPractitionerNote() {
@@ -55,8 +50,8 @@ public class Note {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((patient == null) ? 0 : patient.hashCode());
+		result = prime * result + ((noteId == null) ? 0 : noteId.hashCode());
+		result = prime * result + ((patientId == null) ? 0 : patientId.hashCode());
 		result = prime * result + ((practitionerNote == null) ? 0 : practitionerNote.hashCode());
 		return result;
 	}
@@ -70,15 +65,15 @@ public class Note {
 		if (getClass() != obj.getClass())
 			return false;
 		Note other = (Note) obj;
-		if (id == null) {
-			if (other.id != null)
+		if (noteId == null) {
+			if (other.noteId != null)
 				return false;
-		} else if (!id.equals(other.id))
+		} else if (!noteId.equals(other.noteId))
 			return false;
-		if (patient == null) {
-			if (other.patient != null)
+		if (patientId == null) {
+			if (other.patientId != null)
 				return false;
-		} else if (!patient.equals(other.patient))
+		} else if (!patientId.equals(other.patientId))
 			return false;
 		if (practitionerNote == null) {
 			if (other.practitionerNote != null)
