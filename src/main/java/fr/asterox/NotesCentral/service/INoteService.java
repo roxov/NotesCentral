@@ -4,10 +4,15 @@ import java.util.List;
 
 import fr.asterox.NotesCentral.bean.Note;
 
+/**
+ * 
+ * Microservice managing the notes of patients.
+ *
+ */
 public interface INoteService {
 	public Note addNote(Note note);
 
-	public Note findById(Long noteId);
+	public Note findByNoteId(Long noteId);
 
 	public List<Note> findPatientNotes(Long patientId);
 

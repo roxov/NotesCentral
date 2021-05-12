@@ -1,13 +1,21 @@
 package fr.asterox.NotesCentral.bean;
 
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "notes")
+@SequenceGenerator(name = "seq", initialValue = 1, allocationSize = 100)
 public class Note {
+	@Transient
+	public static final String SEQUENCE_NAME = "notes_sequence";
+
+	private ObjectId _id;
 	@Id
-	private Long noteId;
+	private long noteId;
 	private Long patientId;
 	private String practitionerNote;
 
@@ -15,18 +23,30 @@ public class Note {
 		super();
 	}
 
-	public Note(Long noteId, Long patientId, String practitionerNote) {
+	public Note(Long patientId, String practitionerNote) {
 		super();
-		this.noteId = noteId;
 		this.patientId = patientId;
 		this.practitionerNote = practitionerNote;
 	}
 
-	public Long getNoteId() {
+	public Note(String practitionerNote) {
+		super();
+		this.practitionerNote = practitionerNote;
+	}
+
+	public ObjectId get_id() {
+		return _id;
+	}
+
+	public void set_id(ObjectId _id) {
+		this._id = _id;
+	}
+
+	public long getNoteId() {
 		return noteId;
 	}
 
-	public void setNoteId(Long noteId) {
+	public void setNoteId(long noteId) {
 		this.noteId = noteId;
 	}
 
@@ -50,7 +70,8 @@ public class Note {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((noteId == null) ? 0 : noteId.hashCode());
+		result = prime * result + ((_id == null) ? 0 : _id.hashCode());
+		result = prime * result + (int) (noteId ^ (noteId >>> 32));
 		result = prime * result + ((patientId == null) ? 0 : patientId.hashCode());
 		result = prime * result + ((practitionerNote == null) ? 0 : practitionerNote.hashCode());
 		return result;
@@ -65,10 +86,12 @@ public class Note {
 		if (getClass() != obj.getClass())
 			return false;
 		Note other = (Note) obj;
-		if (noteId == null) {
-			if (other.noteId != null)
+		if (_id == null) {
+			if (other._id != null)
 				return false;
-		} else if (!noteId.equals(other.noteId))
+		} else if (!_id.equals(other._id))
+			return false;
+		if (noteId != other.noteId)
 			return false;
 		if (patientId == null) {
 			if (other.patientId != null)

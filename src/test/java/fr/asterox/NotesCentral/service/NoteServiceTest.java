@@ -33,6 +33,9 @@ public class NoteServiceTest {
 	@Mock
 	private PatientManagementProxy patientManagementProxy;
 
+	@Mock
+	private SequenceGeneratorService sequenceGeneratorService;
+
 	@InjectMocks
 	NoteService noteService;
 
@@ -45,13 +48,19 @@ public class NoteServiceTest {
 	@Test
 	public void givenANote_whenAddNote_thenReturnCreatedNote() {
 		// GIVEN
-		Note note = new Note(1L, 2L, "Ceci est une nouvelle note");
+		noteService.setPatientManagementProxy(patientManagementProxy);
+		noteService.setSequenceGeneratorService(sequenceGeneratorService);
+		Note note = new Note(2L, "Ceci est une nouvelle note");
+		when(patientManagementProxy.askExistenceOfPatient(2L)).thenReturn(true);
+		when(sequenceGeneratorService.generateSequence(Note.SEQUENCE_NAME)).thenReturn(1L);
 		when(noteRepository.save(note)).thenReturn(note);
 
 		// WHEN
 		Note result = noteService.addNote(note);
 
 		// THEN
+		verify(patientManagementProxy, Mockito.times(1)).askExistenceOfPatient(2L);
+		verify(sequenceGeneratorService, Mockito.times(1)).generateSequence(Note.SEQUENCE_NAME);
 		verify(noteRepository, Mockito.times(1)).save(any(Note.class));
 		assertEquals(1L, result.getNoteId());
 		assertEquals(2L, result.getPatientId());
@@ -62,7 +71,7 @@ public class NoteServiceTest {
 	public void givenANoteForInexistentPatient_whenAddNote_thenThrowNoPatientException() {
 		// GIVEN
 		noteService.setPatientManagementProxy(patientManagementProxy);
-		Note note = new Note(1L, 2L, "Ceci est une nouvelle note");
+		Note note = new Note(2L, "Ceci est une nouvelle note");
 		when(patientManagementProxy.askExistenceOfPatient(2L)).thenReturn(false);
 
 		// WHEN
@@ -76,17 +85,36 @@ public class NoteServiceTest {
 	}
 
 	@Test
-	public void givenANoteId_whenGetNote_thenReturnTheNote() {
+	public void givenANote_whenAddViewNote_thenReturnCreatedNote() {
 		// GIVEN
-		Note note = new Note(1L, 2L, "Ceci est une note existante");
-		when(noteRepository.findById(1L)).thenReturn(Optional.of(note));
+		noteService.setPatientManagementProxy(patientManagementProxy);
+		noteService.setSequenceGeneratorService(sequenceGeneratorService);
+		Note note = new Note(2L, "Ceci est une nouvelle note");
+		when(sequenceGeneratorService.generateSequence(Note.SEQUENCE_NAME)).thenReturn(1L);
+		when(noteRepository.save(note)).thenReturn(note);
 
 		// WHEN
-		Note result = noteService.findById(1L);
+		Note result = noteService.addViewNote(note);
 
 		// THEN
-		verify(noteRepository, Mockito.times(1)).findById(1L);
+		verify(sequenceGeneratorService, Mockito.times(1)).generateSequence(Note.SEQUENCE_NAME);
+		verify(noteRepository, Mockito.times(1)).save(any(Note.class));
 		assertEquals(1L, result.getNoteId());
+		assertEquals(2L, result.getPatientId());
+		assertEquals("Ceci est une nouvelle note", result.getPractitionerNote());
+	}
+
+	@Test
+	public void givenANoteId_whenGetNote_thenReturnTheNote() {
+		// GIVEN
+		Note note = new Note(2L, "Ceci est une note existante");
+		when(noteRepository.findByNoteId(1L)).thenReturn(Optional.of(note));
+
+		// WHEN
+		Note result = noteService.findByNoteId(1L);
+
+		// THEN
+		verify(noteRepository, Mockito.times(1)).findByNoteId(1L);
 		assertEquals(2L, result.getPatientId());
 		assertEquals("Ceci est une note existante", result.getPractitionerNote());
 	}
@@ -94,23 +122,23 @@ public class NoteServiceTest {
 	@Test
 	public void givenANonexistentNoteId_whenGetNote_thenThrowNoNoteException() {
 		// GIVEN
-		when(noteRepository.findById(1L)).thenReturn(Optional.empty());
+		when(noteRepository.findByNoteId(1L)).thenReturn(Optional.empty());
 
 		// WHEN
 		Exception exception = assertThrows(NoNoteException.class, () -> {
-			noteService.findById(1L);
+			noteService.findByNoteId(1L);
 		});
 
 		// THEN
-		verify(noteRepository, Mockito.times(1)).findById(1L);
+		verify(noteRepository, Mockito.times(1)).findByNoteId(1L);
 		assertEquals(exception.getMessage(), "This note does not exist.");
 	}
 
 	@Test
 	public void givenTwoNotesForAPatient_whenGetPatientNotes_thenReturnListOfTwoNotes() {
 		// GIVEN
-		Note note1 = new Note(1L, 2L, "Ceci est la première note");
-		Note note2 = new Note(2L, 2L, "Ceci est la deuxième note");
+		Note note1 = new Note(2L, "Ceci est la première note");
+		Note note2 = new Note(2L, "Ceci est la deuxième note");
 		List<Note> patientNotes = List.of(note1, note2);
 		when(noteRepository.findAllByPatientId(2L)).thenReturn(patientNotes);
 
@@ -120,7 +148,6 @@ public class NoteServiceTest {
 		// THEN
 		verify(noteRepository, Mockito.times(1)).findAllByPatientId(2L);
 		assertEquals(2, result.size());
-		assertEquals(1L, result.get(0).getNoteId());
 		assertEquals("Ceci est la deuxième note", result.get(1).getPractitionerNote());
 	}
 
@@ -140,19 +167,37 @@ public class NoteServiceTest {
 	}
 
 	@Test
+	public void givenTwoNotesForAPatient_whenGetPatientStringNotes_thenReturnStringOfTwoNotes() {
+		// GIVEN
+		Note note1 = new Note(2L, "Ceci est la première note");
+		Note note2 = new Note(2L, "Ceci est la deuxième note");
+		List<Note> patientNotes = List.of(note1, note2);
+		when(noteRepository.findAllByPatientId(2L)).thenReturn(patientNotes);
+
+		// WHEN
+		String result = noteService.getPatientStringNotes(2L);
+
+		// THEN
+		verify(noteRepository, Mockito.times(1)).findAllByPatientId(2L);
+		assertEquals("Ceci est la première noteCeci est la deuxième note", result);
+	}
+
+	@Test
 	public void givenANote_whenUpdateNote_thenReturnUpdatedNote() {
 		// GIVEN
-		Note note = new Note(1L, 2L, "Ceci est la note modifiée");
-		when(noteRepository.findById(1L)).thenReturn(Optional.of(note));
+		noteService.setPatientManagementProxy(patientManagementProxy);
+		Note note = new Note(2L, "Ceci est la note modifiée");
+		when(patientManagementProxy.askExistenceOfPatient(2L)).thenReturn(true);
+		when(noteRepository.findByNoteId(1L)).thenReturn(Optional.of(note));
 		when(noteRepository.save(note)).thenReturn(note);
 
 		// WHEN
 		Note updatedNote = noteService.updateNote(1L, note);
 
 		// THEN
-		verify(noteRepository, Mockito.times(1)).findById(any(Long.class));
+		verify(patientManagementProxy, Mockito.times(1)).askExistenceOfPatient(2L);
+		verify(noteRepository, Mockito.times(1)).findByNoteId(any(Long.class));
 		verify(noteRepository, Mockito.times(1)).save(any(Note.class));
-		assertEquals(1L, updatedNote.getNoteId());
 		assertEquals(2L, updatedNote.getPatientId());
 		assertEquals("Ceci est la note modifiée", updatedNote.getPractitionerNote());
 	}
@@ -160,8 +205,8 @@ public class NoteServiceTest {
 	@Test
 	public void givenNonexistentNote_whenUpdateNote_thenThrowNoNoteException() {
 		// GIVEN
-		Note note = new Note(1L, 2L, "Ceci est la note modifiée");
-		when(noteRepository.findById(1L)).thenReturn(Optional.empty());
+		Note note = new Note(2L, "Ceci est la note modifiée");
+		when(noteRepository.findByNoteId(1L)).thenReturn(Optional.empty());
 
 		// WHEN
 		Exception exception = assertThrows(NoNoteException.class, () -> {
@@ -169,29 +214,46 @@ public class NoteServiceTest {
 		});
 
 		// THEN
-		verify(noteRepository, Mockito.times(1)).findById(1L);
+		verify(noteRepository, Mockito.times(1)).findByNoteId(1L);
 		assertEquals(exception.getMessage(), "This note does not exist.");
+	}
+
+	@Test
+	public void givenAInexistentPatient_whenUpdateNote_thenThrowNoPatientException() {
+		// GIVEN
+		noteService.setPatientManagementProxy(patientManagementProxy);
+		Note note = new Note(2L, "Ceci est une nouvelle note");
+		when(patientManagementProxy.askExistenceOfPatient(2L)).thenReturn(false);
+
+		// WHEN
+		Exception exception = assertThrows(NoPatientException.class, () -> {
+			noteService.addNote(note);
+		});
+
+		// THEN
+		verify(patientManagementProxy, Mockito.times(1)).askExistenceOfPatient(2L);
+		assertEquals(exception.getMessage(), "This patient does not exist.");
 	}
 
 	@Test
 	public void givenANote_whenDeleteNote_thenVerifyMethodCalled() {
 		// GIVEN
-		Note note = new Note(1L, 2L, "Ceci est la note à supprimer");
-		when(noteRepository.findById(1L)).thenReturn(Optional.of(note));
-		doNothing().when(noteRepository).deleteById(1L);
+		Note note = new Note(2L, "Ceci est la note à supprimer");
+		when(noteRepository.findByNoteId(1L)).thenReturn(Optional.of(note));
+		doNothing().when(noteRepository).deleteByNoteId(1L);
 
 		// WHEN
 		noteService.deleteNote(1L);
 
 		// THEN
-		verify(noteRepository, Mockito.times(1)).findById(any(Long.class));
-		verify(noteRepository, Mockito.times(1)).deleteById(any(Long.class));
+		verify(noteRepository, Mockito.times(1)).findByNoteId(any(Long.class));
+		verify(noteRepository, Mockito.times(1)).deleteByNoteId(any(Long.class));
 	}
 
 	@Test
 	public void givenANonexistentNote_whenDeleteNote_thenThrowNoNoteException() {
 		// GIVEN
-		when(noteRepository.findById(1L)).thenReturn(Optional.empty());
+		when(noteRepository.findByNoteId(1L)).thenReturn(Optional.empty());
 
 		// WHEN
 		Exception exception = assertThrows(NoNoteException.class, () -> {
@@ -199,7 +261,7 @@ public class NoteServiceTest {
 		});
 
 		// THEN
-		verify(noteRepository, Mockito.times(1)).findById(1L);
+		verify(noteRepository, Mockito.times(1)).findByNoteId(1L);
 		assertEquals(exception.getMessage(), "This note does not exist.");
 	}
 

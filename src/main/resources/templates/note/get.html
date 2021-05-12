@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" 
+	  xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8"/>
+<title>Home</title>
+<link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+	<div class="row">
+		<div class="col-6">
+			<a th:href="@{/note/list/patient/{id}(id=${note.patientId})}">Patient notes</a>&nbsp;|&nbsp;
+		</div>
+	</div>
+	
+	<div class="row"><h2>Note</h2></div>
+	<div class="row">
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th>Note Id</th>
+					<th>Patient Id</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:object="${note}">
+					<td style="width: 10%" th:text="*{noteId}"></td>
+					<td th:utext="*{patientId}"></td>
+					<td style="width: 15%" class="text-center">
+						<a th:href="@{/note/update/{id}(id=${note.noteId})}">Edit</a>&nbsp;|&nbsp;
+						<a th:href="@{/note/delete/{id}(id=${note.noteId})}">Delete</a>
+					</td>					
+				</tr>
+			</tbody>
+		</table>
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th>Practitioner Notes</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:object="${note}">
+					<td style="width: 100%" th:text="*{practitionerNote}"></td>					
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+</body>
+</html>

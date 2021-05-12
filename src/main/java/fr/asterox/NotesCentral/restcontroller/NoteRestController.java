@@ -37,14 +37,21 @@ public class NoteRestController {
 	@GetMapping(value = "/{id}")
 	public Note getNoteById(@PathVariable("id") @NotNull(message = "note id is compulsory") Long noteId) {
 		LOGGER.info("Getting note identified by id");
-		return noteService.findById(noteId);
+		return noteService.findByNoteId(noteId);
 	}
 
-	@GetMapping(value = "/patient/{id}")
+	@GetMapping(value = "/list/patient/{id}")
 	public List<Note> getAllPatientNotes(
 			@PathVariable("id") @NotNull(message = "patientId is compulsory") Long patientId) {
 		LOGGER.info("Getting all notes for patient identified by id : " + patientId);
 		return noteService.findPatientNotes(patientId);
+	}
+
+	@GetMapping(value = "/patient/{id}")
+	public String getPatientStringNotes(
+			@PathVariable("id") @NotNull(message = "patientId is compulsory") Long patientId) {
+		LOGGER.info("Getting all notes in a String for patient identified by id : " + patientId);
+		return noteService.getPatientStringNotes(patientId);
 	}
 
 	@PutMapping(value = "/{id}")
@@ -55,8 +62,10 @@ public class NoteRestController {
 	}
 
 	@DeleteMapping(value = "/{id}")
-	public void deleteNoteById(@PathVariable("id") @NotNull(message = "note id is compulsory") Long noteId) {
+	public String deleteNoteById(@PathVariable("id") @NotNull(message = "note id is compulsory") Long noteId) {
 		LOGGER.info("Getting note identified by id : " + noteId);
 		noteService.deleteNote(noteId);
+		return "The note " + noteId + " is deleted.";
 	}
+
 }
