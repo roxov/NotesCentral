@@ -1,4 +1,4 @@
 FROM openjdk:8
-EXPOSE 8080
+EXPOSE 8082
 CMD ["java", "NotesCentral"]
 
